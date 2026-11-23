@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Undertale Text Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: "Courier New", Courier, monospace;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .header {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+    .heart {
+      color: #ff2a2a;
+      margin-right: 6px;
+    }
+    button {
+      background: #000;
+      color: #fff;
+      border: 2px solid #fff;
+      font-family: inherit;
+      font-size: 14px;
+      padding: 4px 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #fff;
+      color: #000;
+    }
+    .box {
+      width: 100%;
+      max-width: 720px;
+      border: 3px solid #fff;
+      padding: 16px;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      height: 75vh;
+      min-height: 420px;
+    }
+    #output {
+      flex: 1;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      line-height: 1.45;
+      font-size: 15px;
+      margin: 0;
+    }
+    #input-row {
+      display: flex;
+      align-items: center;
+      border-top: 1px solid #444;
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+    #input-row span {
+      color: #ffff00;
+      margin-right: 8px;
+      font-weight: bold;
+    }
+    #cmd {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffff00;
+      font-family: inherit;
+      font-size: 15px;
+    }
+    .footer {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #888;
+    }
+    .footer a {
+      color: #bbb;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+</head>
+<body>
+
+  <div class="header">
+    <div class="title"><span class="heart">&hearts;</span>UNDERTALE (Python Text Demo)</div>
+    <button onclick="location.reload()">Restart</button>
+  </div>
+
+  <div class="box" onclick="focusInput()">
+    <pre id="output">Loading main.py...</pre>
+    <form id="input-row" onsubmit="handleSubmit(event)">
+      <span>&gt;</span>
+      <input id="cmd" type="text" autocomplete="off" placeholder="Type here and press Enter..." disabled>
+    </form>
+  </div>
+
+  <div class="footer">
+    Running <code>main.py</code> in the browser with Skulpt &middot;
+    <a href="https://github.com/minkrov/Undertale-text-base-game">GitHub repo</a>
+  </div>
+
+  <script>
+    const outEl = document.getElementById("output");
+    const cmdEl = document.getElementById("cmd");
+    let waitingResolve = null;
+
+    function focusInput() {
+      if (!cmdEl.disabled) cmdEl.focus();
+    }
+
+    function appendText(txt) {
+      outEl.textContent += txt;
+      outEl.scrollTop = outEl.scrollHeight;
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      if (!waitingResolve) return;
+      const val = cmdEl.value;
+      cmdEl.value = "";
+      cmdEl.disabled = true;
+      appendText(val + "\n");
+      const r = waitingResolve;
+      waitingResolve = null;
+      r(val);
+    }
+
+    function builtinRead(x) {
+      if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
+        throw "File not found: '" + x + "'";
+      }
+      return Sk.builtinFiles["files"][x];
+    }
+
+    async function startGame() {
+      try {
+        const res = await fetch("./main.py");
+        if (!res.ok) throw new Error("Could not load main.py");
+        const code = await res.text();
+        outEl.textContent = "";
+
+        Sk.configure({
+          output: appendText,
+          read: builtinRead,
+          inputfun: function(promptText) {
+            if (promptText) appendText(promptText);
+            cmdEl.disabled = false;
+            cmdEl.focus();
+            return new Promise((resolve) => {
+              waitingResolve = resolve;
+            });
+          },
+          inputfunTakesPrompt: true,
+          __future__: Sk.python3
+        });
+
+        await Sk.misceval.asyncToPromise(() =>
+          Sk.importMainWithBody("<stdin>", false, code, true)
+        );
+        appendText("\n[Game finished - click Restart to play again]");
+      } catch (err) {
+        appendText("\nError running game: " + err.toString());
+      }
+    }
+
+    startGame();
+  </script>
+</body>
+</html>
