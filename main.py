@@ -112,8 +112,13 @@ def use_item(player):
     else:
         heal = 8
 
+    # make sure hp doesnt go over max
     player["hp"] += heal
-    print(f"* Recovered {heal} HP! (HP: {player['hp']}/{player['max_hp']})")
+    if player["hp"] > player["max_hp"]:
+        player["hp"] = player["max_hp"]
+        print(f"* Your HP was maxed out! (HP: {player['hp']}/{player['max_hp']})")
+    else:
+        print(f"* Recovered {heal} HP! (HP: {player['hp']}/{player['max_hp']})")
     return True
 
 
@@ -130,11 +135,11 @@ def battle(player, enemy_name, enemy_hp, enemy_atk):
         spare_tag = " (Yellow - Can Spare!)" if can_spare else ""
         print(f"\n{player['name']} HP: {player['hp']}/{player['max_hp']}   |   {enemy_name} HP: {enemy_hp}/{max_enemy_hp}{spare_tag}")
         print("[1] FIGHT   [2] ACT   [3] ITEM   [4] MERCY")
-        choice = input("> ").strip()
+        choice = input("> ").strip().lower()
 
         turn_used = True
 
-        if choice == "1":
+        if choice == "1" or choice == "fight":
             dmg = player["atk"] + random.randint(2, 6)
             enemy_hp -= dmg
             if enemy_name == "Napstablook":
@@ -164,26 +169,26 @@ def battle(player, enemy_name, enemy_hp, enemy_atk):
                     print(f"* You got {gold_drop}G and your ATK went up!")
                 return "won"
 
-        elif choice == "2":
+        elif choice == "2" or choice == "act":
             if enemy_name == "Froggit":
                 print("\n[1] Check   [2] Compliment   [3] Threaten")
-                act = input("ACT > ").strip()
-                if act == "1":
+                act = input("ACT > ").strip().lower()
+                if act == "1" or act == "check":
                     print("* FROGGIT - ATK 4 DEF 2. Life is difficult for this enemy.")
-                elif act == "2":
+                elif act == "2" or act == "compliment":
                     print("* Froggit didn't understand what you said, but was flattered anyway.")
                     can_spare = True
-                elif act == "3":
+                elif act == "3" or act == "threaten":
                     print("* Froggit didn't understand what you said, but was scared anyway.")
                     can_spare = True
                 else:
                     turn_used = False
             elif enemy_name == "Napstablook":
                 print("\n[1] Check   [2] Cheer")
-                act = input("ACT > ").strip()
-                if act == "1":
+                act = input("ACT > ").strip().lower()
+                if act == "1" or act == "check":
                     print("* NAPSTABLOOK - ATK 5 DEF 4. This monster doesn't seem to have a sense of humor.")
-                elif act == "2":
+                elif act == "2" or act == "cheer":
                     print("* You give Napstablook a patient smile.")
                     print('NAPSTABLOOK: "heh... let me show you something..."')
                     print('* Napstablook makes a little top hat out of tears. "i call it dapper blook..."')
@@ -192,22 +197,22 @@ def battle(player, enemy_name, enemy_hp, enemy_atk):
                     turn_used = False
             elif enemy_name == "Toriel":
                 print("\n[1] Check   [2] Talk")
-                act = input("ACT > ").strip()
-                if act == "1":
+                act = input("ACT > ").strip().lower()
+                if act == "1" or act == "check":
                     print("* TORIEL - ATK 6 DEF 1. Knows best for you.")
-                elif act == "2":
+                elif act == "2" or act == "talk":
                     print("* You tried to think of something to say, but couldn't.")
                     print("* (Hint: Maybe just keep choosing MERCY -> Spare to show you won't fight.)")
                 else:
                     turn_used = False
 
-        elif choice == "3":
+        elif choice == "3" or choice == "item":
             turn_used = use_item(player)
 
-        elif choice == "4":
+        elif choice == "4" or choice == "mercy":
             print("\n[1] Spare   [2] Flee")
-            m = input("MERCY > ").strip()
-            if m == "1":
+            m = input("MERCY > ").strip().lower()
+            if m == "1" or m == "spare":
                 if enemy_name == "Toriel":
                     spare_turns += 1
                     if spare_turns == 1:
@@ -232,7 +237,7 @@ def battle(player, enemy_name, enemy_hp, enemy_atk):
                     return "spared"
                 else:
                     print(f"* {enemy_name} doesn't want to stop fighting yet.")
-            elif m == "2":
+            elif m == "2" or m == "flee":
                 if enemy_name == "Toriel":
                     print("* You can't run away! She's standing right in front of the exit.")
                     turn_used = False
@@ -307,7 +312,8 @@ def ruins(player):
             print("* Invalid choice.")
 
     print("\n* As you walk through a pile of crunching red leaves, something hops out!")
-    battle(player, "Froggit", 28, 4)
+    if battle(player, "Froggit", 28, 4) == "dead":
+        return
 
     print("\n----------------------------------------")
     print("* Further down the hall, you spot 10G hidden under some leaves! (+10G)")
