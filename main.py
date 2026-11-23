@@ -123,6 +123,7 @@ def battle(player, enemy_name, enemy_hp, enemy_atk):
     print("========================================")
 
     can_spare = False
+    spare_turns = 0
     max_enemy_hp = enemy_hp
 
     while enemy_hp > 0 and player["hp"] > 0:
@@ -146,6 +147,14 @@ def battle(player, enemy_name, enemy_hp, enemy_atk):
                 if enemy_name == "Napstablook":
                     print('NAPSTABLOOK: "umm... you know you cant actually kill a ghost, right? awkward..."')
                     print("* Napstablook awkwardly fades away. You gained 0 EXP.")
+                elif enemy_name == "Toriel":
+                    player["kills"] += 1
+                    player["atk"] += 3
+                    print('\nTORIEL: "Y... you really hate me that much?"')
+                    time.sleep(0.8)
+                    print('TORIEL: "Now I see who I was protecting by keeping you here. Not you... them!"')
+                    print('TORIEL: "Be good, won\'t you? My child..."')
+                    print("* Toriel turned to dust.")
                 else:
                     gold_drop = random.randint(5, 10)
                     player["gold"] += gold_drop
@@ -181,6 +190,16 @@ def battle(player, enemy_name, enemy_hp, enemy_atk):
                     can_spare = True
                 else:
                     turn_used = False
+            elif enemy_name == "Toriel":
+                print("\n[1] Check   [2] Talk")
+                act = input("ACT > ").strip()
+                if act == "1":
+                    print("* TORIEL - ATK 6 DEF 1. Knows best for you.")
+                elif act == "2":
+                    print("* You tried to think of something to say, but couldn't.")
+                    print("* (Hint: Maybe just keep choosing MERCY -> Spare to show you won't fight.)")
+                else:
+                    turn_used = False
 
         elif choice == "3":
             turn_used = use_item(player)
@@ -189,7 +208,23 @@ def battle(player, enemy_name, enemy_hp, enemy_atk):
             print("\n[1] Spare   [2] Flee")
             m = input("MERCY > ").strip()
             if m == "1":
-                if can_spare:
+                if enemy_name == "Toriel":
+                    spare_turns += 1
+                    if spare_turns == 1:
+                        print('TORIEL: "....."')
+                    elif spare_turns == 2:
+                        print('TORIEL: "..... ....."')
+                    elif spare_turns == 3:
+                        print('TORIEL: "What are you doing? Attack or run away!"')
+                    else:
+                        print('\nTORIEL: "...Pathetic, is it not? I cannot save even a single child."')
+                        time.sleep(0.8)
+                        print('TORIEL: "No, I understand. You would just be unhappy trapped down here."')
+                        print('TORIEL: "If you truly wish to leave the RUINS... I will not stop you."')
+                        print("* Toriel gives you a warm hug and steps aside.")
+                        player["spared"] += 1
+                        return "spared"
+                elif can_spare:
                     gold_drop = random.randint(2, 5)
                     player["gold"] += gold_drop
                     player["spared"] += 1
@@ -198,7 +233,10 @@ def battle(player, enemy_name, enemy_hp, enemy_atk):
                 else:
                     print(f"* {enemy_name} doesn't want to stop fighting yet.")
             elif m == "2":
-                if random.randint(1, 2) == 1:
+                if enemy_name == "Toriel":
+                    print("* You can't run away! She's standing right in front of the exit.")
+                    turn_used = False
+                elif random.randint(1, 2) == 1:
                     print("* I'm outta here! You escaped.")
                     return "fled"
                 else:
@@ -214,7 +252,10 @@ def battle(player, enemy_name, enemy_hp, enemy_atk):
 
         # enemy turn
         time.sleep(0.4)
-        if random.randint(1, 5) == 1:
+        # toriel misses on purpose if your hp gets super low
+        if enemy_name == "Toriel" and player["hp"] <= 4:
+            print("* Toriel's fireballs deliberately veer away from you at the last second!")
+        elif random.randint(1, 5) == 1:
             print(f"* {enemy_name} attacked, but you dodged out of the way!")
         else:
             hit = random.randint(2, enemy_atk)
@@ -311,8 +352,103 @@ def ruins(player):
             print("* Invalid choice.")
 
 
-def main():
-    print("==============================")
+def toriel_house(player):
+    print("\n----------------------------------------")
+    print("* At the end of the Ruins, you reach a cozy little house.")
+    print("* Inside, the air smells warmly of butterscotch and cinnamon.")
+    print('\nTORIEL: "Surprise! Welcome to your new home, my child."')
+    print('TORIEL: "I even have your own room ready down the hall. Make yourself comfortable!"')
+
+    got_pie = False
+    while True:
+        print("\nWhere do you look?")
+        print("[1] Rest in the bedroom")
+        print("[2] Read the book on the table")
+        print("[3] Check stats")
+        print("[4] Go downstairs into the basement")
+        c = input("> ").strip()
+
+        if c == "1":
+            player["hp"] = player["max_hp"]
+            print("* You take a nice nap under the warm covers. (HP fully restored!)")
+            if not got_pie:
+                player["items"].append("Butterscotch Pie")
+                got_pie = True
+                print("* When you wake up, there's a slice of Butterscotch Pie on a plate by the door!")
+                print("* (Added Butterscotch Pie to items)")
+        elif c == "2":
+            print('* "Fact #14: Snails actually make terrible shoelaces."')
+        elif c == "3":
+            show_stats(player)
+        elif c == "4":
+            break
+        else:
+            print("* Invalid choice.")
+
+    print("\n----------------------------------------")
+    print("* You walk down the long purple basement corridor.")
+    print("* At the very end, Toriel stands silently in front of a huge stone door.")
+    time.sleep(0.8)
+    print('\nTORIEL: "You wish to know how to return \'home\', do you not?"')
+    print('TORIEL: "Ahead of us lies the end of the RUINS. A one-way exit to the rest of the underground."')
+    print('TORIEL: "I am going to destroy it. Every human that leaves here meets the same fate... ASGORE."')
+    print('TORIEL: "If you truly wish to leave... prove to me you are strong enough to survive!"')
+
+    return battle(player, "Toriel", 55, 6)
+
+
+def ending(player):
+    print("\n----------------------------------------")
+    print("* Before you step through the heavy doors, Flowey pops up from a patch of dirt.")
+    time.sleep(0.8)
+
+    if player["kills"] == 0:
+        print('\nFLOWEY: "Clever. Verrrry clever."')
+        print('FLOWEY: "You really didn\'t kill a single monster in there, huh?"')
+        print('FLOWEY: "Well, good luck keeping that up out there... hehehe..."')
+        print("* Flowey sinks into the ground.")
+        time.sleep(1.0)
+        print("\n* You push open the heavy Ruins doors and step out into a snowy forest.")
+        print("* Heavy footsteps crunch in the snow right behind you.")
+        time.sleep(0.9)
+        print('\n???: "H u m a n ."')
+        print('???: "Don\'t you know how to greet a new pal? Turn around and shake my hand."')
+        input("\n[Press Enter to turn around and shake his hand] ")
+        print("\n* pfffffffffft...")
+        time.sleep(0.7)
+        print('SANS: "heheh... the old whoopee cushion in the hand trick. it\'s ALWAYS funny."')
+        print('SANS: "anyways, you\'re a human, right? i\'m sans. sans the skeleton."')
+        print("\n========================================")
+        print("   ENDING: PACIFIST (Ruins Cleared!)    ")
+        print("========================================")
+
+    elif player["kills"] >= 2:
+        print('\nFLOWEY: "Heh... you really turned them all to dust without blinking."')
+        print('FLOWEY: "Maybe you and I aren\'t so different after all..."')
+        print("* Flowey nervously ducks back into the dirt.")
+        time.sleep(0.9)
+        print("\n* You step out into the freezing snowy woods. Everything ahead is dead quiet.")
+        print("* Even the cameras hidden in the bushes seem afraid to move.")
+        print("\n========================================")
+        print("         ENDING: NO MERCY               ")
+        print("========================================")
+
+    else:
+        print('\nFLOWEY: "See? When things got tough, you still swung back."')
+        print('FLOWEY: "Just wait until you meet everyone else out there. Hehehe..."')
+        print("* Flowey disappears.")
+        time.sleep(0.9)
+        print("\n* You step through the big stone doors into a cold, snowy forest.")
+        print("* Your journey through the Underground has only just begun.")
+        print("\n========================================")
+        print("          ENDING: NEUTRAL               ")
+        print("========================================")
+
+    print(f"Final Stats -> Monsters Spared: {player['spared']} | Monsters Killed: {player['kills']} | Gold: {player['gold']}G")
+
+
+def play_once():
+    print("\n==============================")
     print("       UNDERTALE (text)       ")
     print("==============================")
     print("Long ago, two races ruled over Earth: HUMANS and MONSTERS.")
@@ -337,7 +473,19 @@ def main():
 
     flowey_intro(player)
     ruins(player)
-    print("\n[Next up: Toriel's house...]")
+    if player["hp"] > 0:
+        res = toriel_house(player)
+        if res != "dead":
+            ending(player)
+
+
+def main():
+    while True:
+        play_once()
+        again = input("\nPlay again? (y/n): ").strip().lower()
+        if again != "y" and again != "yes":
+            print("* See ya, partner.")
+            break
 
 
 if __name__ == "__main__":
