@@ -2,7 +2,7 @@
 
 It's a small Undertale text-based adventure game in Python (covering the Ruins section), made for a basic Python programming assignment.
 
-**Play in browser:** [Live Demo](https://htmlpreview.github.io/?https://github.com/minkrov/Undertale-text-base-game/blob/main/index.html) (or via [GitHub Pages](https://minkrov.github.io/Undertale-text-base-game/) if enabled)
+**Play in browser:** https://minkrov.github.io/Undertale-text-base-game/
 
 ## Running it locally
 
